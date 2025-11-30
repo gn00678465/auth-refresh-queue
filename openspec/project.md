@@ -4,15 +4,32 @@
 建立一個自動化的請求重試機制，主要用於處理 API 呼叫遇到 401 Unauthorized 錯誤時的情境。當偵測到 401 錯誤，系統應自動觸發 Refresh Token 流程，並將失敗的請求重新發送。
 
 ## Tech Stack
-- TypeScript
-- Node.js
-- Compatibility: Axios, Nuxt Fetch (ofetch), Native Fetch
+- **Language**: TypeScript
+- **Runtime**: Node.js
+- **Package Manager**: pnpm
+- **Build Tool**: tsup
+- **Testing Framework**: Vitest
+- **Compatibility**: Axios, Nuxt Fetch (ofetch), Native Fetch
 
 ## Project Conventions
 
+### Directory Structure
+```
+retry-api/
+├── src/
+│   ├── core/           # 純 JavaScript 實作的核心邏輯 (Pure JS)
+│   ├── nuxt/           # Nuxt 模組整合層
+│   ├── adapters/       # 各種 HTTP Client 的轉接器實作
+│   └── index.ts        # 主要進入點
+├── tests/              # 測試檔案
+├── package.json
+└── tsconfig.json
+```
+
 ### Code Style
 - **Linter**: 使用 ESLint 進行程式碼品質檢查。
-- **Formatting**: 程式碼格式需符合 ESLint 設定規範。
+- **Formatting**: 程式碼格式需符合 Prettier 與 ESLint 設定規範。
+- **Naming**: 變數與函式使用 `camelCase`，類別與介面使用 `PascalCase`。
 
 ### Architecture Patterns
 - **Core-Extension Architecture (核心-擴充架構)**:
@@ -27,7 +44,9 @@
   實作暫存機制。當 Token 刷新時，攔截並暫存後續的 401 請求，待刷新完成後重試。
 
 ### Testing Strategy
-使用 vitest 進行單元測試
+- 使用 **Vitest** 進行單元測試。
+- 針對核心邏輯 (`core`) 撰寫高覆蓋率的測試。
+- 模擬各種 HTTP Client 的行為以測試 Adapter。
 
 ### Git Workflow
 - **Branching Strategy**: 採用 GitHub Flow。
