@@ -1,22 +1,22 @@
 # Tasks: Implement Core Retry Logic
 
-- [ ] **Scaffold Core Package** <!-- id: 0 -->
+- [x] **Scaffold Core Package** <!-- id: 0 -->
     - 建立 `src/core` 目錄結構。
     - 設定 `src/core/index.ts` 作為進入點。
-- [ ] **Define Interfaces** <!-- id: 1 -->
+- [x] **Define Interfaces** <!-- id: 1 -->
     - 定義 `IAdapter` 介面 (包含 `refreshToken`, `applyToken`)。
     - 定義 `IAuthCore` 介面。
-- [ ] **Implement Request Queue** <!-- id: 2 -->
+- [x] **Implement Request Queue** <!-- id: 2 -->
     - 實作 `RequestQueue` 類別，支援 `add`, `clear`, `process` 操作。
     - 撰寫 `RequestQueue` 的單元測試。
-- [ ] **Implement AuthCore State Machine** <!-- id: 3 -->
+- [x] **Implement AuthCore State Machine** <!-- id: 3 -->
     - 實作 `AuthCore` 類別。
     - 實作 `on401` 方法與鎖定機制 (`isRefreshing` flag)。
     - 整合 `RequestQueue` 到 `AuthCore`。
-- [ ] **Implement Refresh Logic** <!-- id: 4 -->
+- [x] **Implement Refresh Logic** <!-- id: 4 -->
     - 在 `AuthCore` 中實作呼叫 `adapter.refreshToken` 的邏輯。
     - 實作成功 (`resolve queue`) 與失敗 (`reject queue`) 的流程。
-- [ ] **Unit Testing** <!-- id: 5 -->
+- [x] **Unit Testing** <!-- id: 5 -->
     - 撰寫 `AuthCore` 的測試案例：
         - 測試單一 401 觸發刷新。
         - 測試並發 401 只觸發一次刷新。
