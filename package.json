@@ -2,9 +2,9 @@
   "name": "retry-api",
   "version": "1.0.0",
   "description": "",
-  "main": "./dist/core.cjs",
-  "module": "./dist/core.mjs",
-  "types": "./dist/core.d.mts",
+  "author": "",
+  "license": "ISC",
+  "keywords": [],
   "exports": {
     "./core": {
       "import": {
@@ -17,6 +17,9 @@
       }
     }
   },
+  "main": "./dist/core.cjs",
+  "module": "./dist/core.mjs",
+  "types": "./dist/core.d.mts",
   "files": [
     "dist"
   ],
@@ -27,13 +30,11 @@
     "lint": "eslint",
     "lint:fix": "eslint --fix"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "devDependencies": {
     "@antfu/eslint-config": "^6.2.0",
     "@types/node": "^24.10.1",
-    "eslint": "^9.38.0",
+    "eslint": "^9.39.1",
+    "eslint-plugin-format": "^1.0.2",
     "tsdown": "0.17.0-beta.3",
     "typescript": "^5.9.3",
     "vitest": "^4.0.14"
