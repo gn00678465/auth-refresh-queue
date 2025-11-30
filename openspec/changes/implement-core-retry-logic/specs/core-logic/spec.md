@@ -42,3 +42,12 @@ When Token refresh fails, the system MUST handle the error properly to avoid inf
 - **When** Adapter 的 `refreshToken` 方法失敗 (拋出錯誤或回傳 null)
 - **Then** 佇列中的所有請求應被拒絕 (Reject)，回傳刷新失敗的錯誤
 - **And** 系統狀態應恢復為 `IDLE` (或特定的 Error 狀態，視實作而定，但需確保能處理下一次登入)
+
+### Requirement: 彈性錯誤判斷
+The system MUST allow configuring custom logic to identify authentication errors, enabling support for non-standard 401 responses or specific internal error codes.
+
+#### Scenario: 擴充錯誤判斷邏輯
+- **Given** 系統配置了自定義的錯誤判斷函式 (例如：檢查 response body 中的 `code: 'TOKEN_EXPIRED'`)
+- **When** 收到一個 HTTP 200 但包含 `code: 'TOKEN_EXPIRED'` 的回應
+- **Then** 系統應判定此為認證錯誤
+- **And** 觸發 Token 刷新流程 (轉變為 `REFRESHING` 狀態)
