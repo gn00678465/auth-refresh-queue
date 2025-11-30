@@ -15,7 +15,7 @@
 
 ### Directory Structure
 ```
-retry-api/
+auth-refresh-queue/
 ├── src/
 │   ├── core/           # 純 JavaScript 實作的核心邏輯 (Pure JS)
 │   ├── nuxt/           # Nuxt 模組整合層
@@ -35,8 +35,8 @@ retry-api/
 ### Architecture Patterns
 - **Core-Extension Architecture (核心-擴充架構)**:
   採用多入口 (Multi-entry) 策略發布 npm 套件，以確保核心邏輯與框架實作分離：
-  - `retry-api/core`: 純 JavaScript 實作的核心邏輯 (Pure JS)，不依賴特定框架，包含狀態管理與佇列機制。
-  - `retry-api/nuxt`: 專為 Nuxt 設計的整合層 (Nuxt Module/Plugin)，提供自動注入與設定。
+  - `auth-refresh-queue/core`: 純 JavaScript 實作的核心邏輯 (Pure JS)，不依賴特定框架，包含狀態管理與佇列機制。
+  - `auth-refresh-queue/nuxt`: 專為 Nuxt 設計的整合層 (Nuxt Module/Plugin)，提供自動注入與設定。
 
 - **Adapter Pattern (轉接器模式)**:
   核心層 (`core`) 透過定義統一的 Adapter 介面與外部溝通，讓使用者能注入不同的 HTTP Client (如 Axios, ofetch) 而不修改核心程式碼。
@@ -67,7 +67,7 @@ retry-api/
 - **Peer Dependencies (Optional)**:
   - `axios`: 若使用者選擇 Axios 作為請求客戶端時需安裝。
   - `ofetch`: 若使用者選擇 Nuxt Fetch / ofetch 作為請求客戶端時需安裝。
-  - `nuxt`: 僅在使用 `retry-api/nuxt` 模組時需要。
+  - `nuxt`: 僅在使用 `auth-refresh-queue/nuxt` 模組時需要。
 
 - **System Interactions**:
   - **Backend API**: 本專案不依賴特定後端服務，但預期後端需遵循標準 HTTP 協定：

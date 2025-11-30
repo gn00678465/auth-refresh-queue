@@ -1,7 +1,7 @@
 # 提案：實作核心重試邏輯 (Implement Core Retry Logic)
 
 ## Summary
-本提案旨在建立 `retry-api` 的核心邏輯層 (`core`)。這將是一個純 JavaScript/TypeScript 的實作，負責處理 401 Unauthorized 錯誤的攔截、Token 刷新流程的狀態管理，以及並發請求的佇列 (Queueing) 機制。此核心層將不依賴任何特定的 HTTP Client (如 Axios 或 fetch)，而是透過 Adapter 模式來進行整合。
+本提案旨在建立 `auth-refresh-queue` 的核心邏輯層 (`core`)。這將是一個純 JavaScript/TypeScript 的實作，負責處理 401 Unauthorized 錯誤的攔截、Token 刷新流程的狀態管理，以及並發請求的佇列 (Queueing) 機制。此核心層將不依賴任何特定的 HTTP Client (如 Axios 或 fetch)，而是透過 Adapter 模式來進行整合。
 
 ## Motivation
 目前的專案目標是提供一個通用的重試機制。為了達成「彈性 (Flexibility)」的架構需求，我們必須將重試邏輯從特定的 HTTP 框架中抽離出來。透過實作一個獨立的核心層，我們可以確保業務邏輯的一致性，並能輕易地擴充支援 Nuxt、Axios 或原生 Fetch。

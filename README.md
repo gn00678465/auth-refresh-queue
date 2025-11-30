@@ -14,9 +14,9 @@
 ## 安裝
 
 ```bash
-npm install retry-api
+npm install auth-refresh-queue
 # 或
-pnpm add retry-api
+pnpm add auth-refresh-queue
 ```
 
 ## 使用方式
@@ -26,9 +26,9 @@ pnpm add retry-api
 使用 `createAuthRetry` 函數可以快速設定認證重試系統，這是最簡單的使用方式：
 
 ```typescript
-import { createAuthRetry } from 'retry-api/core';
+import { createAuthRetry } from 'auth-refresh-queue/core';
 
-const authRetry = createAuthRetry({
+const authQueue = createAuthRetry({
   adapter: {
     refreshToken: async () => {
       const response = await fetch('/api/auth/refresh', {
@@ -56,8 +56,8 @@ const authRetry = createAuthRetry({
 axios.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (authRetry.isAuthError(error)) {
-      await authRetry.on401();
+    if (authQueue.isAuthError(error)) {
+      await authQueue.on401();
       // 重試原請求
       return axios(error.config);
     }
@@ -75,7 +75,7 @@ axios.interceptors.response.use(
 首先，你需要實作 `IAdapter` 介面，告訴 Core 如何刷新 Token 以及如何應用新 Token。
 
 ```typescript
-import { IAdapter } from 'retry-api/core';
+import { IAdapter } from 'auth-refresh-queue/core';
 
 class MyAxiosAdapter implements IAdapter {
   // 實作刷新 Token 的邏輯
@@ -104,7 +104,7 @@ class MyAxiosAdapter implements IAdapter {
 #### 2. 初始化 AuthCore 並註冊 Adapter
 
 ```typescript
-import { AuthCore } from 'retry-api/core';
+import { AuthCore } from 'auth-refresh-queue/core';
 
 // 初始化
 const authCore = new AuthCore({
@@ -162,9 +162,9 @@ axios.interceptors.response.use(
 ### Fetch API 範例
 
 ```typescript
-import { createAuthRetry } from 'retry-api/core';
+import { createAuthRetry } from 'auth-refresh-queue/core';
 
-const authRetry = createAuthRetry({
+const authQueue = createAuthRetry({
   adapter: {
     refreshToken: async () => {
       const response = await fetch('/api/auth/refresh', {
@@ -198,7 +198,7 @@ async function fetchWithAuth(url, options = {}) {
   });
 
   if (response.status === 401) {
-    await authRetry.on401();
+    await authQueue.on401();
     // 重試
     const newToken = localStorage.getItem('access_token');
     return fetch(url, {
@@ -218,10 +218,10 @@ async function fetchWithAuth(url, options = {}) {
 
 ```typescript
 // plugins/auth-retry.ts
-import { createAuthRetry } from 'retry-api/core';
+import { createAuthRetry } from 'auth-refresh-queue/core';
 
 export default defineNuxtPlugin(() => {
-  const authRetry = createAuthRetry({
+  const authQueue = createAuthRetry({
     adapter: {
       refreshToken: async () => {
         const { data } = await $fetch('/api/auth/refresh', {
@@ -245,7 +245,7 @@ export default defineNuxtPlugin(() => {
   
   return {
     provide: {
-      authRetry,
+      authQueue,
     },
   };
 });
@@ -274,7 +274,7 @@ export default defineNuxtPlugin(() => {
 #### 範例
 
 ```typescript
-const authRetry = createAuthRetry({
+const authQueue = createAuthRetry({
   adapter: {
     refreshToken: async () => {
       const res = await fetch('/api/refresh');
@@ -292,7 +292,7 @@ const authRetry = createAuthRetry({
 });
 
 // 使用
-await authRetry.on401();
+await authQueue.on401();
 ```
 
 ### `AuthCore`
@@ -336,20 +336,20 @@ shouldRefresh: (error) => {
 }
 ```
 
-### 如何在多個 HTTP Client 中使用同一個 authRetry 實例？
+### 如何在多個 HTTP Client 中使用同一個 authQueue 實例？
 
-將 `authRetry` 實例導出並在需要的地方引用：
+將 `authQueue` 實例導出並在需要的地方引用：
 
 ```typescript
 // auth.ts
-export const authRetry = createAuthRetry({ /* ... */ });
+export const authQueue = createAuthRetry({ /* ... */ });
 
 // axios-client.ts
-import { authRetry } from './auth';
+import { authQueue } from './auth';
 axios.interceptors.response.use(/* ... */);
 
 // fetch-client.ts
-import { authRetry } from './auth';
+import { authQueue } from './auth';
 // 使用同一個實例
 ```
 

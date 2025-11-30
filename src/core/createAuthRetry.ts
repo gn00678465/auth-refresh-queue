@@ -30,7 +30,7 @@ export interface AuthRetryInstance {
  *
  * @example
  * ```ts
- * const authRetry = createAuthRetry({
+ * const authQueue = createAuthRetry({
  *   adapter: {
  *     refreshToken: async () => {
  *       const response = await fetch('/api/refresh')
@@ -49,7 +49,7 @@ export interface AuthRetryInstance {
  * })
  *
  * // Use in your HTTP interceptor
- * await authRetry.on401()
+ * await authQueue.on401()
  * ```
  */
 export function createAuthRetry(options: CreateAuthRetryOptions): AuthRetryInstance {
