@@ -1,27 +1,27 @@
-import { Task } from './types';
+import type { Task } from './types'
 
 export class RequestQueue {
-  private queue: Task[] = [];
+  private queue: Task[] = []
 
   add(task: Task): void {
-    this.queue.push(task);
+    this.queue.push(task)
   }
 
   clear(): void {
-    this.queue = [];
+    this.queue = []
   }
 
   process(): void {
     this.queue.forEach((task) => {
-      task.resolve();
-    });
-    this.clear();
+      task.resolve()
+    })
+    this.clear()
   }
 
   rejectAll(error: unknown): void {
     this.queue.forEach((task) => {
-      task.reject(error);
-    });
-    this.clear();
+      task.reject(error)
+    })
+    this.clear()
   }
 }
