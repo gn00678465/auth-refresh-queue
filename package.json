@@ -2,15 +2,40 @@
   "name": "retry-api",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "./dist/core.cjs",
+  "module": "./dist/core.mjs",
+  "types": "./dist/core.d.mts",
+  "exports": {
+    "./core": {
+      "import": {
+        "types": "./dist/core.d.mts",
+        "default": "./dist/core.mjs"
+      },
+      "require": {
+        "types": "./dist/core.d.cts",
+        "default": "./dist/core.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsdown",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@antfu/eslint-config": "^6.2.0",
     "@types/node": "^24.10.1",
-    "typescript": "^5.9.3"
+    "eslint": "^9.38.0",
+    "tsdown": "0.17.0-beta.3",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.14"
   }
 }
