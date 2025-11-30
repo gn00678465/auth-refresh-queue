@@ -21,7 +21,56 @@ pnpm add retry-api
 
 ## 使用方式
 
-### 1. 實作 Adapter
+### 快速開始 (推薦)
+
+使用 `createAuthRetry` 函數可以快速設定認證重試系統，這是最簡單的使用方式：
+
+```typescript
+import { createAuthRetry } from 'retry-api/core';
+
+const authRetry = createAuthRetry({
+  adapter: {
+    refreshToken: async () => {
+      const response = await fetch('/api/auth/refresh', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const data = await response.json();
+      return data.accessToken;
+    },
+    applyToken: (token) => {
+      localStorage.setItem('token', token);
+    },
+    logout: () => {
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    },
+  },
+  shouldRefresh: (error) => {
+    return error.response?.status === 401 && 
+           !error.config?.url?.includes('/auth/refresh');
+  },
+});
+
+// 在 HTTP Client 攔截器中使用
+axios.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (authRetry.isAuthError(error)) {
+      await authRetry.on401();
+      // 重試原請求
+      return axios(error.config);
+    }
+    return Promise.reject(error);
+  }
+);
+```
+
+### 進階使用 - 手動配置
+
+如果需要更細緻的控制，可以手動使用 `AuthCore` 類別。
+
+#### 1. 實作 Adapter
 
 首先，你需要實作 `IAdapter` 介面，告訴 Core 如何刷新 Token 以及如何應用新 Token。
 
@@ -52,7 +101,7 @@ class MyAxiosAdapter implements IAdapter {
 }
 ```
 
-### 2. 初始化 AuthCore 並註冊 Adapter
+#### 2. 初始化 AuthCore 並註冊 Adapter
 
 ```typescript
 import { AuthCore } from 'retry-api/core';
@@ -73,7 +122,7 @@ const adapter = new MyAxiosAdapter();
 authCore.registerAdapter(adapter);
 ```
 
-### 3. 整合至 HTTP Client 攔截器 (Interceptor)
+#### 3. 整合至 HTTP Client 攔截器 (Interceptor)
 
 在你的 HTTP Client 的 Response Interceptor 中呼叫 `authCore.on401(error)`。
 
@@ -108,7 +157,143 @@ axios.interceptors.response.use(
 );
 ```
 
+## 使用範例
+
+### Fetch API 範例
+
+```typescript
+import { createAuthRetry } from 'retry-api/core';
+
+const authRetry = createAuthRetry({
+  adapter: {
+    refreshToken: async () => {
+      const response = await fetch('/api/auth/refresh', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (!response.ok) return null;
+      const data = await response.json();
+      return data.accessToken;
+    },
+    applyToken: (token) => {
+      localStorage.setItem('access_token', token);
+    },
+    logout: () => {
+      localStorage.clear();
+      window.location.href = '/login';
+    },
+  },
+  shouldRefresh: (error) => error?.status === 401,
+});
+
+// 包裝 fetch
+async function fetchWithAuth(url, options = {}) {
+  const token = localStorage.getItem('access_token');
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      ...options.headers,
+      Authorization: token ? `Bearer ${token}` : '',
+    },
+  });
+
+  if (response.status === 401) {
+    await authRetry.on401();
+    // 重試
+    const newToken = localStorage.getItem('access_token');
+    return fetch(url, {
+      ...options,
+      headers: {
+        ...options.headers,
+        Authorization: `Bearer ${newToken}`,
+      },
+    });
+  }
+
+  return response;
+}
+```
+
+### Nuxt 3 / $fetch 範例
+
+```typescript
+// plugins/auth-retry.ts
+import { createAuthRetry } from 'retry-api/core';
+
+export default defineNuxtPlugin(() => {
+  const authRetry = createAuthRetry({
+    adapter: {
+      refreshToken: async () => {
+        const { data } = await $fetch('/api/auth/refresh', {
+          method: 'POST',
+        });
+        return data.accessToken;
+      },
+      applyToken: (token) => {
+        const cookie = useCookie('token');
+        cookie.value = token;
+      },
+      logout: () => {
+        navigateTo('/login');
+      },
+    },
+    shouldRefresh: (error) => error?.statusCode === 401,
+  });
+
+  // 設置全域攔截器
+  const { $fetch } = useNuxtApp();
+  
+  return {
+    provide: {
+      authRetry,
+    },
+  };
+});
+```
+
 ## API 參考
+
+### `createAuthRetry(options)`
+
+**便捷函數**，用於快速建立並配置認證重試系統。
+
+#### 參數
+
+- `options: CreateAuthRetryOptions`
+  - `adapter: IAdapter` - 必填。適配器實例，定義如何刷新和應用 Token
+  - `shouldRefresh?: (error: unknown) => boolean` - 選用。自定義判斷錯誤是否觸發刷新的邏輯
+
+#### 返回值
+
+返回 `AuthRetryInstance` 物件，包含以下方法：
+
+- `on401(): Promise<unknown>` - 處理 401 認證錯誤，自動刷新 Token 並重試佇列中的請求
+- `isAuthError(error: unknown): boolean` - 判斷錯誤是否為認證錯誤
+- `updateAdapter(newAdapter: IAdapter): void` - 在運行時更新適配器
+
+#### 範例
+
+```typescript
+const authRetry = createAuthRetry({
+  adapter: {
+    refreshToken: async () => {
+      const res = await fetch('/api/refresh');
+      const data = await res.json();
+      return data.token;
+    },
+    applyToken: (token) => {
+      localStorage.setItem('token', token);
+    },
+    logout: () => {
+      window.location.href = '/login';
+    },
+  },
+  shouldRefresh: (error) => error?.response?.status === 401,
+});
+
+// 使用
+await authRetry.on401();
+```
 
 ### `AuthCore`
 
@@ -137,3 +322,43 @@ axios.interceptors.response.use(
 - `refreshToken(): Promise<string | null>`: 執行刷新 API。回傳新 Token 字串，失敗回傳 `null`。
 - `applyToken(token: string): void`: 應用新 Token (如更新 Header)。
 - `logout?(): void`: (選用) 刷新失敗時的登出處理。
+
+## 常見問題
+
+### 如何避免刷新 API 本身觸發無窮迴圈？
+
+在 `shouldRefresh` 中排除刷新 Token 的 API：
+
+```typescript
+shouldRefresh: (error) => {
+  return error.response?.status === 401 && 
+         !error.config?.url?.includes('/auth/refresh');
+}
+```
+
+### 如何在多個 HTTP Client 中使用同一個 authRetry 實例？
+
+將 `authRetry` 實例導出並在需要的地方引用：
+
+```typescript
+// auth.ts
+export const authRetry = createAuthRetry({ /* ... */ });
+
+// axios-client.ts
+import { authRetry } from './auth';
+axios.interceptors.response.use(/* ... */);
+
+// fetch-client.ts
+import { authRetry } from './auth';
+// 使用同一個實例
+```
+
+### Token 刷新失敗後會發生什麼？
+
+1. 所有佇列中的請求都會被 reject
+2. 如果 adapter 有定義 `logout()` 方法，會自動呼叫
+3. 你可以在 interceptor 的 catch block 中處理後續邏輯
+
+## 授權
+
+MIT

@@ -30,6 +30,7 @@ retry-api/
 - **Linter**: 使用 ESLint 進行程式碼品質檢查。
 - **Formatting**: 程式碼格式需符合 Prettier 與 ESLint 設定規範。
 - **Naming**: 變數與函式使用 `camelCase`，類別與介面使用 `PascalCase`。
+- **Typescript**: 禁止使用 any 型別, 當出現 ESLint 與 type 相關的錯誤, 必須修正。
 
 ### Architecture Patterns
 - **Core-Extension Architecture (核心-擴充架構)**:
