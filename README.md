@@ -8,6 +8,9 @@
 
 - **框架無關**: 可與 Axios, Fetch, Nuxt 等任何 HTTP Client 整合。
 - **並發處理**: 當多個請求同時遇到 401 時，只會發送一次刷新 Token 請求，其餘請求會進入佇列等待。
+- **智慧型錯誤檢測**: 內建 Axios、Fetch、Response 物件的 401 錯誤檢測，開箱即用。
+- **佇列保護**: 可配置的佇列大小限制（預設 100），防止記憶體溢出。
+- **可觀測性**: 提供 `refreshing` 和 `queueSize` getters，方便監控和除錯。
 - **狀態管理**: 自動處理 `IDLE` 與 `REFRESHING` 狀態切換。
 - **彈性配置**: 支援自定義錯誤判斷邏輯 (不僅限於 HTTP 401)。
 
@@ -46,10 +49,13 @@ const authQueue = createAuthRetry({
       window.location.href = '/login';
     },
   },
+  // 選用：自訂錯誤判斷邏輯（預設已支援 Axios/Fetch/Response 的 401 檢測）
   shouldRefresh: (error) => {
     return error.response?.status === 401 && 
            !error.config?.url?.includes('/auth/refresh');
   },
+  // 選用：設定佇列大小上限（預設 100）
+  maxQueueSize: 50,
 });
 
 // 在 HTTP Client 攔截器中使用
@@ -261,15 +267,18 @@ export default defineNuxtPlugin(() => {
 
 - `options: CreateAuthRetryOptions`
   - `adapter: IAdapter` - 必填。適配器實例，定義如何刷新和應用 Token
-  - `shouldRefresh?: (error: unknown) => boolean` - 選用。自定義判斷錯誤是否觸發刷新的邏輯
+  - `shouldRefresh?: (error: unknown) => boolean` - 選用。自定義判斷錯誤是否觸發刷新的邏輯。**預設已支援 Axios、Fetch、Response 物件的 401 錯誤檢測**
+  - `maxQueueSize?: number` - 選用。佇列大小上限，預設為 100。超過此限制時會拋出錯誤
 
 #### 返回值
 
-返回 `AuthRetryInstance` 物件，包含以下方法：
+返回 `AuthRetryInstance` 物件，包含以下方法和屬性：
 
 - `on401(): Promise<unknown>` - 處理 401 認證錯誤，自動刷新 Token 並重試佇列中的請求
-- `isAuthError(error: unknown): boolean` - 判斷錯誤是否為認證錯誤
+- `isAuthError(error: unknown): boolean` - 判斷錯誤是否為認證錯誤。預設支援 Axios、Fetch、Response 物件的 401 檢測
 - `updateAdapter(newAdapter: IAdapter): void` - 在運行時更新適配器
+- `refreshing: boolean` - （Getter）當前是否正在刷新 Token
+- `queueSize: number` - （Getter）當前佇列中等待的請求數量
 
 #### 範例
 
@@ -299,8 +308,10 @@ await authQueue.on401();
 
 #### `constructor(options?: AuthCoreOptions)`
 
-- `options.shouldRefresh`: `(error: any) => boolean`
-  - 選用。自定義判斷錯誤是否觸發刷新的邏輯。
+- `options.shouldRefresh?: (error: any) => boolean`
+  - 選用。自定義判斷錯誤是否觸發刷新的邏輯。**預設已支援 Axios、Fetch、Response 物件的 401 錯誤檢測**
+- `options.maxQueueSize?: number`
+  - 選用。佇列大小上限，預設為 100。超過此限制時會拋出錯誤
 
 #### `registerAdapter(adapter: IAdapter): void`
 
@@ -323,11 +334,87 @@ await authQueue.on401();
 - `applyToken(token: string): void`: 應用新 Token (如更新 Header)。
 - `logout?(): void`: (選用) 刷新失敗時的登出處理。
 
+## 監控與除錯
+
+### 查看當前刷新狀態和佇列大小
+
+```typescript
+const authQueue = createAuthRetry({ /* ... */ });
+
+// 檢查是否正在刷新
+if (authQueue.refreshing) {
+  console.log('Token 刷新進行中...');
+}
+
+// 檢查佇列大小
+console.log(`當前等待的請求數: ${authQueue.queueSize}`);
+
+// 在攔截器中使用
+axios.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (authQueue.isAuthError(error)) {
+      console.log(`佇列狀態 - 刷新中: ${authQueue.refreshing}, 佇列大小: ${authQueue.queueSize}`);
+      await authQueue.on401();
+      return axios(error.config);
+    }
+    return Promise.reject(error);
+  }
+);
+```
+
+### 處理佇列溢出
+
+當佇列超過大小限制時，會拋出錯誤：
+
+```typescript
+const authQueue = createAuthRetry({
+  adapter: { /* ... */ },
+  maxQueueSize: 50, // 限制佇列大小
+});
+
+axios.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (authQueue.isAuthError(error)) {
+      try {
+        await authQueue.on401();
+        return axios(error.config);
+      } catch (queueError) {
+        if (queueError.message.includes('Queue overflow')) {
+          console.error('請求佇列已滿，請稍後再試');
+          // 可以在這裡顯示使用者提示
+        }
+        return Promise.reject(queueError);
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+```
+
 ## 常見問題
 
 ### 如何避免刷新 API 本身觸發無窮迴圈？
 
-在 `shouldRefresh` 中排除刷新 Token 的 API：
+**使用預設檢測時**：建議在攔截器中明確排除刷新 API：
+
+```typescript
+axios.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    // 排除刷新 API 本身
+    if (authQueue.isAuthError(error) && 
+        !error.config?.url?.includes('/auth/refresh')) {
+      await authQueue.on401();
+      return axios(error.config);
+    }
+    return Promise.reject(error);
+  }
+);
+```
+
+**使用自訂 `shouldRefresh` 時**：在邏輯中排除刷新 Token 的 API：
 
 ```typescript
 shouldRefresh: (error) => {
