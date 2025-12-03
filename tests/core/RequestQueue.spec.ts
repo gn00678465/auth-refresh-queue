@@ -44,4 +44,72 @@ describe('requestQueue', () => {
     expect(task2.reject).toHaveBeenCalledWith(error)
     expect(task1.resolve).not.toHaveBeenCalled()
   })
+
+  it('should enforce default max queue size of 100', () => {
+    const queue = new RequestQueue()
+    const task = { resolve: vi.fn(), reject: vi.fn() }
+
+    // Add 100 tasks - should succeed
+    for (let i = 0; i < 100; i++) {
+      queue.add(task)
+    }
+
+    // 101st task should throw
+    expect(() => queue.add(task)).toThrow('Queue overflow: maximum size of 100 exceeded')
+  })
+
+  it('should enforce custom max queue size', () => {
+    const queue = new RequestQueue(5)
+    const task = { resolve: vi.fn(), reject: vi.fn() }
+
+    // Add 5 tasks - should succeed
+    for (let i = 0; i < 5; i++) {
+      queue.add(task)
+    }
+
+    // 6th task should throw
+    expect(() => queue.add(task)).toThrow('Queue overflow: maximum size of 5 exceeded')
+  })
+
+  it('should throw error with descriptive message on overflow', () => {
+    const queue = new RequestQueue(10)
+    const task = { resolve: vi.fn(), reject: vi.fn() }
+
+    for (let i = 0; i < 10; i++) {
+      queue.add(task)
+    }
+
+    expect(() => queue.add(task)).toThrow(/Queue overflow/)
+    expect(() => queue.add(task)).toThrow(/maximum size of 10/)
+  })
+
+  it('should return accurate queue size via size() method', () => {
+    const queue = new RequestQueue()
+    const task = { resolve: vi.fn(), reject: vi.fn() }
+
+    expect(queue.size()).toBe(0)
+
+    queue.add(task)
+    expect(queue.size()).toBe(1)
+
+    queue.add(task)
+    queue.add(task)
+    expect(queue.size()).toBe(3)
+
+    queue.process()
+    expect(queue.size()).toBe(0)
+  })
+
+  it('should resolve queued promises with true on process()', () => {
+    const queue = new RequestQueue()
+    const task1 = { resolve: vi.fn(), reject: vi.fn() }
+    const task2 = { resolve: vi.fn(), reject: vi.fn() }
+
+    queue.add(task1)
+    queue.add(task2)
+    queue.process()
+
+    expect(task1.resolve).toHaveBeenCalledWith(true)
+    expect(task2.resolve).toHaveBeenCalledWith(true)
+  })
 })

@@ -2,8 +2,16 @@ import type { Task } from './types'
 
 export class RequestQueue {
   private queue: Task[] = []
+  private maxSize: number
+
+  constructor(maxSize: number = 100) {
+    this.maxSize = maxSize
+  }
 
   add(task: Task): void {
+    if (this.queue.length >= this.maxSize) {
+      throw new Error(`Queue overflow: maximum size of ${this.maxSize} exceeded`)
+    }
     this.queue.push(task)
   }
 
@@ -11,9 +19,13 @@ export class RequestQueue {
     this.queue = []
   }
 
+  size(): number {
+    return this.queue.length
+  }
+
   process(): void {
     this.queue.forEach((task) => {
-      task.resolve()
+      task.resolve(true)
     })
     this.clear()
   }

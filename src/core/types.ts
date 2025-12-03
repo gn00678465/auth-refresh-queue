@@ -5,7 +5,7 @@ export interface IAdapter {
 }
 
 export interface IAuthCore {
-  on401: (error: unknown) => Promise<unknown>
+  on401: () => Promise<unknown>
   registerAdapter: (adapter: IAdapter) => void
 }
 
