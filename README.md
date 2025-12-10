@@ -16,10 +16,41 @@
 
 ## 安裝
 
+### GitHub Packages 登入設定
+
+此套件發佈到 GitHub Packages Registry，首先需要配置 `.npmrc` 檔案以允許安裝：
+
+#### 選項 1：配置全域 `.npmrc`
+
+編輯 `~/.npmrc` 或 `%USERPROFILE%\.npmrc`（Windows）：
+
+```
+@gn00678465:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=YOUR_GITHUB_TOKEN
+```
+
+#### 選項 2：配置專案層級 `.npmrc`
+
+在專案根目錄建立 `.npmrc` 檔案：
+
+```
+@gn00678465:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=YOUR_GITHUB_TOKEN
+```
+
+> **取得 GitHub Token**：
+> 1. 前往 GitHub Settings → Developer settings → Personal access tokens
+> 2. 建立 token，勾選 `read:packages` 權限
+> 3. 複製 token 替換上面的 `YOUR_GITHUB_TOKEN`
+
+### 安裝套件
+
+設定完 `.npmrc` 後，使用以下指令安裝：
+
 ```bash
-npm install auth-refresh-queue
+npm install @gn00678465/auth-refresh-queue
 # 或
-pnpm add auth-refresh-queue
+pnpm add @gn00678465/auth-refresh-queue
 ```
 
 ## 使用方式
