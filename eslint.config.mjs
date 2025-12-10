@@ -7,4 +7,7 @@ export default antfu({
   typescript: true,
   yaml: false,
   markdown: false,
+  ignores: [
+    'tsdown.config.ts',
+  ],
 })

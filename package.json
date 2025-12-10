@@ -1,10 +1,28 @@
 {
-  "name": "auth-refresh-queue",
+  "name": "@gn00678465/auth-refresh-queue",
   "version": "1.0.0",
-  "description": "",
-  "author": "",
+  "packageManager": "pnpm@9.12.3+sha512.cce0f9de9c5a7c95bef944169cc5dfe8741abfb145078c0d508b868056848a87c81e626246cb60967cbd7fd29a6c062ef73ff840d96b3c86c40ac92cf4a813ee",
+  "description": "Universal authentication retry core library for handling token expiration and automatic refresh",
+  "author": "gn00678465",
   "license": "ISC",
-  "keywords": [],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gn00678465/auth-refresh-queue.git"
+  },
+  "keywords": [
+    "auth",
+    "authentication",
+    "refresh-token",
+    "retry",
+    "queue",
+    "axios",
+    "fetch",
+    "401"
+  ],
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "public"
+  },
   "exports": {
     "./core": {
       "import": {
@@ -34,6 +52,7 @@
   "devDependencies": {
     "@antfu/eslint-config": "^6.2.0",
     "@types/node": "^24.10.1",
+    "bumpp": "^10.3.2",
     "eslint": "^9.39.1",
     "eslint-plugin-format": "^1.0.2",
     "tsdown": "0.17.0-beta.3",
