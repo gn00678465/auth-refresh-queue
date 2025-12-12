@@ -60,7 +60,7 @@ pnpm add @gn00678465/auth-refresh-queue
 使用 `createAuthRetry` 函數可以快速設定認證重試系統，這是最簡單的使用方式：
 
 ```typescript
-import { createAuthRetry } from 'auth-refresh-queue/core';
+import { createAuthRetry } from '@gn00678465/auth-refresh-queue/core';
 
 const authQueue = createAuthRetry({
   adapter: {
@@ -112,7 +112,7 @@ axios.interceptors.response.use(
 首先，你需要實作 `IAdapter` 介面，告訴 Core 如何刷新 Token 以及如何應用新 Token。
 
 ```typescript
-import { IAdapter } from 'auth-refresh-queue/core';
+import { IAdapter } from '@gn00678465/auth-refresh-queue/core';
 
 class MyAxiosAdapter implements IAdapter {
   // 實作刷新 Token 的邏輯
@@ -141,7 +141,7 @@ class MyAxiosAdapter implements IAdapter {
 #### 2. 初始化 AuthCore 並註冊 Adapter
 
 ```typescript
-import { AuthCore } from 'auth-refresh-queue/core';
+import { AuthCore } from '@gn00678465/auth-refresh-queue/core';
 
 // 初始化
 const authCore = new AuthCore({
@@ -199,7 +199,7 @@ axios.interceptors.response.use(
 ### Fetch API 範例
 
 ```typescript
-import { createAuthRetry } from 'auth-refresh-queue/core';
+import { createAuthRetry } from '@gn00678465/auth-refresh-queue/core';
 
 const authQueue = createAuthRetry({
   adapter: {
@@ -255,7 +255,7 @@ async function fetchWithAuth(url, options = {}) {
 
 ```typescript
 // plugins/auth-retry.ts
-import { createAuthRetry } from 'auth-refresh-queue/core';
+import { createAuthRetry } from '@gn00678465/auth-refresh-queue/core';
 
 export default defineNuxtPlugin(() => {
   const authQueue = createAuthRetry({
